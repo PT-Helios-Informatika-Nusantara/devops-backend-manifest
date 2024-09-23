@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hms-azure-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hms-azure-backend
+  template:
+    metadata:
+      labels:
+        app: hms-azure-backend
+    spec:
+      containers:
+        - name: hms-azure-backend
+          image: octovianus/hms-azure-backend
+          ports:
+            - containerPort: 8080 # The port your Node.js app listens on
+      imagePullSecrets:
+        - name: my-dockerhub-secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: hms-azure-backend-service
+spec:
+  selector:
+    app: hms-azure-backend
+  ports:
+    - protocol: TCP
+      port: 80            # Port that the service will listen on within the cluster # The port on which the Service will be exposed
+      targetPort: 8080   # Port on the pods that the service will forward traffic to # The port on the Pod that the Service should forward traffic to
+      nodePort: 30081     # The port on the node (VM) on which the Service can be accessed externally
+  type: NodePort
