@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: hms-azure-backend
 spec:
-  replicas: 3
+  replicas: 15
   selector:
     matchLabels:
       app: hms-azure-backend
@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: hms-azure-backend
-          image: octovianus/hms-azure-backend:11
+          image: octovianus/hms-azure-backend:18
           ports:
             - containerPort: 8080 # The port your Node.js app listens on
       imagePullSecrets:
