@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: hms-azure-backend
 spec:
-  replicas: 15
+  replicas: 6
   selector:
     matchLabels:
       app: hms-azure-backend
