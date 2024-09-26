@@ -26,7 +26,7 @@ node {
                 sh "cat deployment.yaml"
                 sh "git add ."
                 sh "git commit -m 'Done by Jenkins job hms-backend-manifest: ${params.DOCKERTAG}'"
-                sh "git push https://github.com/PT-Helios-Informatika-Nusantara/devops-backend-manifest.git HEAD:main"
+                sh "git push https://github.com/PT-Helios-Informatika-Nusantara/devops-backend-manifest.git HEAD:octo"
                 
             }
             
