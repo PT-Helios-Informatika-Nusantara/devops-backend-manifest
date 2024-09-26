@@ -34,4 +34,5 @@ spec:
       port: 80            # Port that the service will listen on within the cluster # The port on which the Service will be exposed
       targetPort: 8080   # Port on the pods that the service will forward traffic to # The port on the Pod that the Service should forward traffic to
       nodePort: 30081     # The port on the node (VM) on which the Service can be accessed externally
-  type: NodePort
+  # type: NodePort
+  type: LoadBalancer
