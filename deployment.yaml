@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: hms-azure-backend
-          image: octovianus/hms-azure-backend:30
+          image: octovianus/hms-azure-backend:31
           ports:
             - containerPort: 8080 # The port your Node.js app listens on
       imagePullSecrets:
