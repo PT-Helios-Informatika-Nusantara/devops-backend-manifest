@@ -21,7 +21,7 @@ node {
                 sh "git config --global user.email octovianus.pabubung@helios.id"
                 
                 sh "cat deployment.yaml"
-                sh "sed -i 's+octovianus/hms-azure-backend.*+octovianus/hms-azure-backend:${params.DOCKERTAG}+g' deployment.yaml"
+                sh "sed -i 's+hindev2024/hms-azure-backend.*+hindev2024/hms-azure-backend:${params.DOCKERTAG}+g' deployment.yaml"
                 
                 sh "cat deployment.yaml"
                 sh "git add ."
