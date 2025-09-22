@@ -116,8 +116,8 @@ spec:
       labels:
         app: app
     spec:
-      imagePullSecrets:
-        # - name: kouventaaisecret
+      # imagePullSecrets:
+      #   - name: kouventaaisecret
       containers:
         - name: app
           image: hindev2024/kouventa-ai-be:latest
@@ -158,8 +158,8 @@ spec:
       labels:
         app: ixd
     spec:
-      imagePullSecrets:
-        # - name: kouventaaisecret
+      # imagePullSecrets:
+      #   - name: kouventaaisecret
       containers:
         - name: ixd
           image: hindev2024/kouventa-ai-be:latest
