@@ -1,38 +1,181 @@
+# backend hms
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: hms-azure-backend
+# spec:
+#   replicas: 10
+#   selector:
+#     matchLabels:
+#       app: hms-azure-backend
+#   template:
+#     metadata:
+#       labels:
+#         app: hms-azure-backend
+#     spec:
+#       containers:
+#         - name: hms-azure-backend
+#           image: hindev2024/hms-azure-backend:22
+#           ports:
+#             - containerPort: 8080 # The port your Node.js app listens on
+#       # imagePullSecrets:
+#       #   - name: my-dockerhub-secret
+
+# ---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: hms-azure-backend-service
+# spec:
+#   selector:
+#     app: hms-azure-backend
+#   ports:
+#     - protocol: TCP
+#       port: 80            # Port that the service will listen on within the cluster # The port on which the Service will be exposed
+#       targetPort: 8080   # Port on the pods that the service will forward traffic to # The port on the Pod that the Service should forward traffic to
+#       # nodePort: 30081     # The port on the node (VM) on which the Service can be accessed externally
+#   # type: NodePort
+#   type: LoadBalancer
+
+  # backend kouventa ai
+
+# db
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hms-azure-backend
+  name: db
 spec:
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
-      app: hms-azure-backend
+      app: db
   template:
     metadata:
       labels:
-        app: hms-azure-backend
+        app: db
     spec:
       containers:
-        - name: hms-azure-backend
-          image: hindev2024/hms-azure-backend:22
-          ports:
-            - containerPort: 8080 # The port your Node.js app listens on
-      # imagePullSecrets:
-      #   - name: my-dockerhub-secret
-
+        - name: db
+          image: pgvector/pgvector:pg16
+          envFrom:
+            - secretRef:
+                name: db-secret
+          volumeMounts:
+            - name: pgdata-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pgdata-storage
+          persistentVolumeClaim:
+            claimName: pgdata-pvc
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
-  name: hms-azure-backend-service
+  name: db
 spec:
-  selector:
-    app: hms-azure-backend
   ports:
-    - protocol: TCP
-      port: 80            # Port that the service will listen on within the cluster # The port on which the Service will be exposed
-      targetPort: 8080   # Port on the pods that the service will forward traffic to # The port on the Pod that the Service should forward traffic to
-      # nodePort: 30081     # The port on the node (VM) on which the Service can be accessed externally
-  # type: NodePort
-  type: LoadBalancer
+    - port: 5432
+  selector:
+    app: db
+
+# migrate job
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: hindev2024/kouventa-ai-be:latest
+          envFrom:
+            - secretRef:
+                name: db-secret
+          env:
+            - name: APP_ROLE
+              value: migrate
+
+# app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+        - name: app
+          image: hindev2024/kouventa-ai-be:latest
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - secretRef:
+                name: db-secret
+          env:
+            - name: APP_ROLE
+              value: app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8081
+      targetPort: 8081
+  selector:
+    app: app
+
+# ixd
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ixd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ixd
+  template:
+    metadata:
+      labels:
+        app: ixd
+    spec:
+      containers:
+        - name: ixd
+          image: hindev2024/kouventa-ai-be:latest
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - secretRef:
+                name: db-secret
+          env:
+            - name: APP_ROLE
+              value: ixd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ixd
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8082
+      targetPort: 8082
+  selector:
+    app: ixd
