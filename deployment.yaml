@@ -4,9 +4,9 @@ metadata:
   name: postgres-secret
 type: Opaque
 data:
-  POSTGRES_USER: developer # e.g., echo -n 'postgres' | base64
-  POSTGRES_PASSWORD: dockerdbpassword # e.g., echo -n 'your_strong_password' | base64
-  POSTGRES_DB: kouvai # e.g., echo -n 'mydatabase' | base64
+  POSTGRES_USER: developer
+  POSTGRES_PASSWORD: dockerdbpassword
+  POSTGRES_DB: kouvai
 
 # ------------------------------
 # 1. Persistent Volume Claim for Postgres
@@ -33,7 +33,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
-    # storageClassName: standard
+    storageClassName: standard
 
 # ------------------------------
 # 2. Postgres Deployment + Service
@@ -63,11 +63,11 @@ spec:
           volumeMounts:
             - name: pgdata-storage
               mountPath: /var/lib/postgresql/data
-          # readinessProbe:
-          #   exec:
-          #     command: ["pg_isready", "-U", "$(DB_USER)", "-d", "$(DB_NAME)"]
-          #   initialDelaySeconds: 10
-          #   periodSeconds: 5
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "$(DB_USER)", "-d", "$(DB_NAME)"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
       volumes:
         - name: pgdata-storage
           persistentVolumeClaim:
