@@ -42,144 +42,144 @@
   # backend kouventa ai
 
 # db
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: db
-  template:
-    metadata:
-      labels:
-        app: db
-    spec:
-      containers:
-        - name: db
-          image: pgvector/pgvector:pg16
-          envFrom:
-            - secretRef:
-                name: db-secret
-          volumeMounts:
-            - name: pgdata-storage
-              mountPath: /var/lib/postgresql/data
-      volumes:
-        - name: pgdata-storage
-          persistentVolumeClaim:
-            claimName: pgdata-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: db
-spec:
-  ports:
-    - port: 5432
-  selector:
-    app: db
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: db
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: db
+#   template:
+#     metadata:
+#       labels:
+#         app: db
+#     spec:
+#       containers:
+#         - name: db
+#           image: pgvector/pgvector:pg16
+#           envFrom:
+#             - secretRef:
+#                 name: db-secret
+#           volumeMounts:
+#             - name: pgdata-storage
+#               mountPath: /var/lib/postgresql/data
+#       volumes:
+#         - name: pgdata-storage
+#           persistentVolumeClaim:
+#             claimName: pgdata-pvc
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: db
+# spec:
+#   ports:
+#     - port: 5432
+#   selector:
+#     app: db
 
-# migrate job
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: migrate
-spec:
-  template:
-    spec:
-      restartPolicy: OnFailure
-      containers:
-        - name: migrate
-          image: hindev2024/kouventa-ai-be:latest
-          envFrom:
-            - secretRef:
-                name: db-secret
-          env:
-            - name: APP_ROLE
-              value: migrate
+# # migrate job
+# ---
+# apiVersion: batch/v1
+# kind: Job
+# metadata:
+#   name: migrate
+# spec:
+#   template:
+#     spec:
+#       restartPolicy: OnFailure
+#       containers:
+#         - name: migrate
+#           image: hindev2024/kouventa-ai-be:latest
+#           envFrom:
+#             - secretRef:
+#                 name: db-secret
+#           env:
+#             - name: APP_ROLE
+#               value: migrate
 
-# app
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: app
-  template:
-    metadata:
-      labels:
-        app: app
-    spec:
-      imagePullSecrets:
-        - name: docker-hin-access
-      containers:
-        - name: app
-          image: hindev2024/kouventa-ai-be:latest
-          ports:
-            - containerPort: 8081
-          envFrom:
-            - secretRef:
-                name: db-secret
-          env:
-            - name: APP_ROLE
-              value: app
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: app
-spec:
-  type: ClusterIP
-  ports:
-    - port: 8081
-      targetPort: 8081
-  selector:
-    app: app
+# # app
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: app
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: app
+#   template:
+#     metadata:
+#       labels:
+#         app: app
+#     spec:
+#       imagePullSecrets:
+#         - name: docker-hin-access
+#       containers:
+#         - name: app
+#           image: hindev2024/kouventa-ai-be:latest
+#           ports:
+#             - containerPort: 8081
+#           envFrom:
+#             - secretRef:
+#                 name: db-secret
+#           env:
+#             - name: APP_ROLE
+#               value: app
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: app
+# spec:
+#   type: ClusterIP
+#   ports:
+#     - port: 8081
+#       targetPort: 8081
+#   selector:
+#     app: app
 
-# ixd
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ixd
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: ixd
-  template:
-    metadata:
-      labels:
-        app: ixd
-    spec:
-      imagePullSecrets:
-        - name: docker-hin-access
-      containers:
-        - name: ixd
-          image: hindev2024/kouventa-ai-be:latest
-          ports:
-            - containerPort: 8082
-          envFrom:
-            - secretRef:
-                name: db-secret
-          env:
-            - name: APP_ROLE
-              value: ixd
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: ixd
-spec:
-  type: ClusterIP
-  ports:
-    - port: 8082
-      targetPort: 8082
-  selector:
-    app: ixd
+# # ixd
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: ixd
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: ixd
+#   template:
+#     metadata:
+#       labels:
+#         app: ixd
+#     spec:
+#       imagePullSecrets:
+#         - name: docker-hin-access
+#       containers:
+#         - name: ixd
+#           image: hindev2024/kouventa-ai-be:latest
+#           ports:
+#             - containerPort: 8082
+#           envFrom:
+#             - secretRef:
+#                 name: db-secret
+#           env:
+#             - name: APP_ROLE
+#               value: ixd
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: ixd
+# spec:
+#   type: ClusterIP
+#   ports:
+#     - port: 8082
+#       targetPort: 8082
+#   selector:
+#     app: ixd
