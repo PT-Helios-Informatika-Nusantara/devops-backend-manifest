@@ -1,3 +1,13 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+type: Opaque
+data:
+  POSTGRES_USER: developer # e.g., echo -n 'postgres' | base64
+  POSTGRES_PASSWORD: dockerdbpassword # e.g., echo -n 'your_strong_password' | base64
+  POSTGRES_DB: kouvai # e.g., echo -n 'mydatabase' | base64
+
 # ------------------------------
 # 1. Persistent Volume Claim for Postgres
 # ------------------------------
@@ -11,6 +21,7 @@ spec:
   resources:
     requests:
       storage: 5Gi
+    storageClassName: standard
 ---
 # ------------------------------
 # 2. Postgres Deployment + Service
@@ -36,7 +47,7 @@ spec:
             - containerPort: 5432
           envFrom:
             - secretRef:
-                name: db-secret
+                name: postgres-secret
           volumeMounts:
             - name: pgdata-storage
               mountPath: /var/lib/postgresql/data
@@ -56,9 +67,14 @@ metadata:
   name: db
 spec:
   ports:
-    - port: 5432
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
   selector:
     app: db
+  type: ClusterIP # Or NodePort/LoadBalancer for external access
+
+
 ---
 # ------------------------------
 # 3. Migration Job
