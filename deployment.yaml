@@ -12,6 +12,18 @@ data:
 # 1. Persistent Volume Claim for Postgres
 # ------------------------------
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/postgres"   # directory on each node
+    
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pgdata-pvc
