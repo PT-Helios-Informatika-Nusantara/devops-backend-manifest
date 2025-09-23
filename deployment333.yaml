@@ -1,20 +1,47 @@
-# ------------------------------
-# 1. Persistent Volume Claim for Postgres
-# ------------------------------
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pgdata-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-# ------------------------------
-# 2. Postgres Deployment + Service
-# ------------------------------
+# backend hms
+
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: hms-azure-backend
+# spec:
+#   replicas: 10
+#   selector:
+#     matchLabels:
+#       app: hms-azure-backend
+#   template:
+#     metadata:
+#       labels:
+#         app: hms-azure-backend
+#     spec:
+#       containers:
+#         - name: hms-azure-backend
+#           image: hindev2024/hms-azure-backend:22
+#           ports:
+#             - containerPort: 8080 # The port your Node.js app listens on
+#       # imagePullSecrets:
+#       #   - name: my-dockerhub-secret
+
+# ---
+
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: hms-azure-backend-service
+# spec:
+#   selector:
+#     app: hms-azure-backend
+#   ports:
+#     - protocol: TCP
+#       port: 80            # Port that the service will listen on within the cluster # The port on which the Service will be exposed
+#       targetPort: 8080   # Port on the pods that the service will forward traffic to # The port on the Pod that the Service should forward traffic to
+#       # nodePort: 30081     # The port on the node (VM) on which the Service can be accessed externally
+#   # type: NodePort
+#   type: LoadBalancer
+
+  # backend kouventa ai
+
+# db
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -32,19 +59,12 @@ spec:
       containers:
         - name: db
           image: pgvector/pgvector:pg16
-          ports:
-            - containerPort: 5432
           envFrom:
             - secretRef:
                 name: db-secret
           volumeMounts:
             - name: pgdata-storage
               mountPath: /var/lib/postgresql/data
-          readinessProbe:
-            exec:
-              command: ["pg_isready", "-U", "$(DB_USER)", "-d", "$(DB_NAME)"]
-            initialDelaySeconds: 10
-            periodSeconds: 5
       volumes:
         - name: pgdata-storage
           persistentVolumeClaim:
@@ -59,10 +79,9 @@ spec:
     - port: 5432
   selector:
     app: db
+
+# migrate job
 ---
-# ------------------------------
-# 3. Migration Job
-# ------------------------------
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -71,8 +90,6 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      imagePullSecrets:
-        - name: docker-hin-access
       containers:
         - name: migrate
           image: hindev2024/kouventa-ai-be:latest
@@ -82,10 +99,9 @@ spec:
           env:
             - name: APP_ROLE
               value: migrate
+
+# app
 ---
-# ------------------------------
-# 4. App Deployment + Service
-# ------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -113,12 +129,6 @@ spec:
           env:
             - name: APP_ROLE
               value: app
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8081
-            initialDelaySeconds: 10
-            periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
@@ -131,10 +141,9 @@ spec:
       targetPort: 8081
   selector:
     app: app
+
+# ixd
 ---
-# ------------------------------
-# 5. IXD Deployment + Service
-# ------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -162,12 +171,6 @@ spec:
           env:
             - name: APP_ROLE
               value: ixd
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8082
-            initialDelaySeconds: 10
-            periodSeconds: 5
 ---
 apiVersion: v1
 kind: Service
